@@ -6,11 +6,12 @@ import (
 )
 
 func Start() {
+	mux := http.NewServeMux()
 	// define the route
-	http.HandleFunc("/greet", greet)
-	http.HandleFunc("/customers", getAllCustomer)
+	mux.HandleFunc("/greet", greet)
+	mux.HandleFunc("/customers", getAllCustomer)
 
-	err := http.ListenAndServe("localhost:8000", nil)
+	err := http.ListenAndServe("localhost:8000", mux)
 
 	if err != nil {
 		log.Panic(err)

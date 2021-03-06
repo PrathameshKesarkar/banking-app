@@ -12,10 +12,11 @@ import (
 func Start() {
 	router := mux.NewRouter()
 
-	customerHandler := CustomerHandler{service: service.NewCustomerService(domain.NewCustomerRepositoryStub())}
+	customerHandler := CustomerHandler{service: service.NewCustomerService(domain.NewCustomerRepositoryDB())}
 
 	// define the route
 	router.HandleFunc("/customers", customerHandler.getAllCustomer).Methods(http.MethodGet)
+	router.HandleFunc("/customer/{customer_id:[0-9]+}", customerHandler.getCustomerById).Methods(http.MethodGet)
 
 	err := http.ListenAndServe("localhost:8000", router)
 

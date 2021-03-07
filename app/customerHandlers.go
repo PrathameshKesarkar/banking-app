@@ -9,12 +9,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Customer struct {
-	Name    string `json:"full_name" xml:"name"`
-	City    string `json:"city" xml:"city"`
-	Zipcode string `json:"zip_code" xml:"zipcode"`
-}
-
 type CustomerHandler struct {
 	service service.CustomerService
 }
@@ -38,11 +32,18 @@ func (ch *CustomerHandler) getAllCustomer(writer http.ResponseWriter, req *http.
 func (ch *CustomerHandler) getCustomerById(writer http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	customer, err := ch.service.GetCustomerById(vars["customer_id"])
-	writer.Header().Add("Content-Type", "application/json")
 	if err != nil {
-		writer.WriteHeader(err.Code)
-		json.NewEncoder(writer).Encode(err)
-		return
+		writeResponse(writer, err.Code, err.AsMessage())
+	} else {
+		writeResponse(writer, http.StatusOK, customer)
 	}
-	json.NewEncoder(writer).Encode(customer)
+}
+
+func writeResponse(writer http.ResponseWriter, code int, data interface{}) {
+	writer.Header().Add("Content-Type", "application/json")
+	writer.WriteHeader(code)
+	if err := json.NewEncoder(writer).Encode(data); err != nil {
+		panic(err)
+	}
+
 }

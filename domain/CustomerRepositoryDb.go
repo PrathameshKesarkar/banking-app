@@ -2,10 +2,9 @@ package domain
 
 import (
 	"database/sql"
-	"log"
 	"time"
-
 	"github.com/PrathameshKesarkar/banking-app/errs"
+	"github.com/PrathameshKesarkar/banking-app/logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -13,18 +12,24 @@ type CustomerRepositoryDb struct {
 	client *sql.DB
 }
 
-func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
+func (d CustomerRepositoryDb) FindAll(status string) ([]Customer, *errs.AppError) {
 
-	findAllSQL := "Select customer_id, name, city, zipcode, date_of_birth, status from customers"
-
-	rows, err := d.client.Query(findAllSQL)
+	var rows *sql.Rows
+	var err error
+	if status == "" {
+		findAllSQL := "Select customer_id, name, city, zipcode, date_of_birth, status from customers"
+		rows, err = d.client.Query(findAllSQL)
+	} else {
+		findAllSQL := "Select customer_id, name, city, zipcode, date_of_birth, status from customers where status = ?"
+		rows, err = d.client.Query(findAllSQL, status)
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("error while fetching")
+			logger.Error("error while fetching")
 			return nil, errs.NewNotFoundError("Error while fetching customers")
 		} else {
-			log.Println("Error with SQL connection")
+			logger.Error("Error with SQL connection")
 			return nil, errs.NewUnexpectedError("Something went wrong")
 		}
 	}
@@ -35,6 +40,7 @@ func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
 		err := rows.Scan(&c.Id, &c.Name, &c.City, &c.Zipcode, &c.DateofBirth, &c.Status)
 
 		if err != nil {
+			logger.Error("Error while initalizing customer data")
 			return nil, errs.NewUnexpectedError("Unexpected error happened")
 		}
 		customers = append(customers, c)
@@ -50,8 +56,10 @@ func (d CustomerRepositoryDb) ById(id string) (*Customer, *errs.AppError) {
 	err := row.Scan(&customer.Id, &customer.Name, &customer.City, &customer.Zipcode, &customer.DateofBirth, &customer.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logger.Error("No Customer found for the id: "+id)
 			return nil, errs.NewNotFoundError("Customer Not found")
 		} else {
+			logger.Error("Something went wrong while quering data in sql")
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
 	}

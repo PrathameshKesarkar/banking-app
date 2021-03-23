@@ -16,7 +16,7 @@ func Start() {
 
 	// define the route
 	router.HandleFunc("/customers", customerHandler.getAllCustomer).Methods(http.MethodGet)
-	router.HandleFunc("/customer/{customer_id:[0-9]+}", customerHandler.getCustomerById).Methods(http.MethodGet)
+	router.HandleFunc("/customers/{customer_id:[0-9]+}", customerHandler.getCustomerById).Methods(http.MethodGet)
 
 	err := http.ListenAndServe("localhost:8000", router)
 
